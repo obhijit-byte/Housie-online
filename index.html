@@ -1,4 +1,156 @@
-<!DOCTYPE html><html lang="en">
+let allTickets = [];
+
+function createSingleTicket() {
+
+  let ticket;
+  let valid = false;
+
+  while (!valid) {
+
+    ticket = Array(27).fill(null);
+
+    // Each row gets exactly 5 positions
+    for (let row = 0; row < 3; row++) {
+
+      let positions = [];
+
+      while (positions.length < 5) {
+
+        const position =
+          Math.floor(Math.random() * 9);
+
+        if (!positions.includes(position)) {
+          positions.push(position);
+        }
+      }
+
+      positions.sort((a, b) => a - b);
+
+      for (let col of positions) {
+
+        const min =
+          col === 0 ? 1 : col * 10 + 1;
+
+        const max =
+          col === 8 ? 90 : (col + 1) * 10;
+
+        let value;
+
+        do {
+
+          value =
+            Math.floor(
+              Math.random() * (max - min + 1)
+            ) + min;
+
+        } while (ticket.includes(value));
+
+        ticket[row * 9 + col] = value;
+      }
+    }
+
+    // Make sure exactly 15 numbers exist
+    valid =
+      ticket.filter(n => n !== null).length === 15;
+  }
+
+  return ticket;
+}
+
+
+function ticketKey(ticket) {
+
+  return ticket
+    .map(n => n === null ? "x" : n)
+    .join(",");
+}
+
+
+function generate500Tickets() {
+
+  allTickets = [];
+
+  const uniqueTickets = new Set();
+
+  while (allTickets.length < 500) {
+
+    const newTicket = createSingleTicket();
+
+    const key = ticketKey(newTicket);
+
+    if (!uniqueTickets.has(key)) {
+
+      uniqueTickets.add(key);
+      allTickets.push(newTicket);
+    }
+  }
+
+  renderAllTickets();
+
+  document.getElementById("ticketCount")
+    .textContent =
+    "🎟️ " + allTickets.length + " tickets generated";
+}
+
+
+function renderAllTickets() {
+
+  const container =
+    document.getElementById("allTickets");
+
+  container.innerHTML = "";
+
+  allTickets.forEach((ticket, ticketIndex) => {
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className = "ticket-wrapper";
+
+    const title =
+      document.createElement("div");
+
+    title.className = "ticket-title";
+
+    title.textContent =
+      "🎟️ Ticket #" + (ticketIndex + 1);
+
+    wrapper.appendChild(title);
+
+    const ticketGrid =
+      document.createElement("div");
+
+    ticketGrid.className = "ticket";
+
+    ticket.forEach(value => {
+
+      const cell =
+        document.createElement("div");
+
+      cell.className = "ticket-cell";
+
+      if (value === null) {
+
+        cell.classList.add("empty");
+
+      } else {
+
+        cell.textContent = value;
+
+        // If number has already been called
+        if (calledNumbers.includes(value)) {
+          cell.classList.add("marked");
+        }
+      }
+
+      ticketGrid.appendChild(cell);
+    });
+
+    wrapper.appendChild(ticketGrid);
+
+    container.appendChild(wrapper);
+  });
+}<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Housie Online</title><style>
