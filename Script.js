@@ -1,5 +1,554 @@
 const ticketEl = document.getElementById("ticket");
 const boardEl = document.getElementById("board");
+
+const calledCountEl = document.getElementById("calledCount");
+const remainingCountEl = document.getElementById("remainingCount");
+const currentNumberEl = document.getElementById("currentNumber");
+
+const bigNumberEl = document.getElementById("bigNumber");
+const messageEl = document.getElementById("message");
+
+const callBtn = document.getElementById("callBtn");
+const newGameBtn = document.getElementById("newGameBtn");
+const newTicketBtn = document.getElementById("newTicketBtn");
+
+const claimsList = document.getElementById("claimsList");
+
+let calledNumbers = [];
+let ticket = [];
+let markedNumbers = new Set();
+
+let winners = {
+  top: false,
+  middle: false,
+  bottom: false,
+  full: false
+};
+
+
+// --------------------------------------------------
+// SHUFFLE
+// --------------------------------------------------
+
+function shuffle(array) {
+  const arr = [...array];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+}
+
+
+// --------------------------------------------------
+// RANDOM NUMBER
+// --------------------------------------------------
+
+function randomNumber(min, max) {
+  return Math.floor(
+    Math.random() * (max - min + 1)
+  ) + min;
+}
+
+
+// --------------------------------------------------
+// CREATE PROPER HOUSIE TICKET
+// --------------------------------------------------
+
+function createTicket() {
+
+  const grid = Array.from(
+    { length: 3 },
+    () => Array(9).fill(null)
+  );
+
+  // Every row has exactly 5 numbers
+  const rowColumns = [];
+
+  for (let row = 0; row < 3; row++) {
+
+    const columns = shuffle(
+      [0,1,2,3,4,5,6,7,8]
+    ).slice(0, 5);
+
+    columns.sort((a, b) => a - b);
+
+    rowColumns.push(columns);
+  }
+
+  // Make sure every column has at least one number
+  for (let col = 0; col < 9; col++) {
+
+    if (!rowColumns.some(row => row.includes(col))) {
+
+      const possibleRows = [0,1,2]
+        .filter(row => rowColumns[row].length > 1);
+
+      const row = possibleRows[
+        randomNumber(0, possibleRows.length - 1)
+      ];
+
+      const removeIndex = randomNumber(
+        0,
+        rowColumns[row].length - 1
+      );
+
+      rowColumns[row].splice(removeIndex, 1);
+
+      rowColumns[row].push(col);
+
+      rowColumns[row].sort((a,b) => a-b);
+    }
+  }
+
+  // Generate numbers column-wise
+  for (let col = 0; col < 9; col++) {
+
+    let min;
+    let max;
+
+    if (col === 0) {
+      min = 1;
+      max = 9;
+    } else if (col === 8) {
+      min = 80;
+      max = 90;
+    } else {
+      min = col * 10;
+      max = col * 10 + 9;
+    }
+
+    const rows = [0,1,2].filter(
+      row => rowColumns[row].includes(col)
+    );
+
+    const numbers = shuffle(
+      Array.from(
+        { length: max - min + 1 },
+        (_, i) => min + i
+      )
+    ).slice(0, rows.length);
+
+    numbers.sort((a,b) => a-b);
+
+    rows.forEach((row, index) => {
+      grid[row][col] = numbers[index];
+    });
+  }
+
+  return grid.flat();
+}
+
+
+// --------------------------------------------------
+// NEW TICKET
+// --------------------------------------------------
+
+function newTicket() {
+
+  ticket = createTicket();
+
+  markedNumbers.clear();
+
+  renderTicket();
+}
+
+
+// --------------------------------------------------
+// RENDER TICKET
+// --------------------------------------------------
+
+function renderTicket() {
+
+  ticketEl.innerHTML = "";
+
+  ticket.forEach((number, index) => {
+
+    const cell = document.createElement("div");
+
+    cell.className = "ticket-cell";
+
+    if (number === null) {
+
+      cell.classList.add("empty");
+
+    } else {
+
+      cell.textContent = number;
+
+      if (markedNumbers.has(number)) {
+        cell.classList.add("marked");
+      }
+
+      if (calledNumbers.includes(number)) {
+        cell.classList.add("called-number");
+      }
+
+      cell.addEventListener("click", () => {
+
+        // Only called numbers can be marked
+        if (!calledNumbers.includes(number)) {
+          return;
+        }
+
+        if (markedNumbers.has(number)) {
+          markedNumbers.delete(number);
+        } else {
+          markedNumbers.add(number);
+        }
+
+        renderTicket();
+        checkAutomaticClaims();
+
+      });
+
+    }
+
+    ticketEl.appendChild(cell);
+
+  });
+
+}
+
+
+// --------------------------------------------------
+// CREATE BOARD
+// --------------------------------------------------
+
+function createBoard() {
+
+  boardEl.innerHTML = "";
+
+  for (let i = 1; i <= 90; i++) {
+
+    const cell = document.createElement("div");
+
+    cell.className = "board-number";
+
+    cell.id = `board-${i}`;
+
+    cell.textContent = i;
+
+    boardEl.appendChild(cell);
+  }
+
+}
+
+
+// --------------------------------------------------
+// UPDATE BOARD
+// --------------------------------------------------
+
+function updateBoard() {
+
+  for (let i = 1; i <= 90; i++) {
+
+    const cell = document.getElementById(`board-${i}`);
+
+    if (!cell) continue;
+
+    cell.classList.remove("called");
+    cell.classList.remove("current");
+
+    if (calledNumbers.includes(i)) {
+      cell.classList.add("called");
+    }
+
+    if (
+      calledNumbers.length > 0 &&
+      calledNumbers[calledNumbers.length - 1] === i
+    ) {
+      cell.classList.add("current");
+    }
+
+  }
+
+}
+
+
+// --------------------------------------------------
+// CALL NUMBER
+// --------------------------------------------------
+
+function callNumber() {
+
+  if (calledNumbers.length >= 90) {
+
+    messageEl.textContent = "All numbers called!";
+
+    callBtn.disabled = true;
+
+    return;
+  }
+
+  const available = [];
+
+  for (let i = 1; i <= 90; i++) {
+
+    if (!calledNumbers.includes(i)) {
+      available.push(i);
+    }
+
+  }
+
+  const number =
+    available[
+      randomNumber(0, available.length - 1)
+    ];
+
+  calledNumbers.push(number);
+
+  currentNumberEl.textContent = number;
+  bigNumberEl.textContent = number;
+
+  messageEl.textContent =
+    `Number ${number} called!`;
+
+  calledCountEl.textContent =
+    calledNumbers.length;
+
+  remainingCountEl.textContent =
+    90 - calledNumbers.length;
+
+  updateBoard();
+  renderTicket();
+
+  if (calledNumbers.length === 90) {
+    callBtn.disabled = true;
+  }
+
+}
+
+
+// --------------------------------------------------
+// CHECK LINE
+// --------------------------------------------------
+
+function checkLine(row) {
+
+  const start = row * 9;
+
+  const numbers = ticket.slice(
+    start,
+    start + 9
+  ).filter(n => n !== null);
+
+  return numbers.every(
+    number => markedNumbers.has(number)
+  );
+
+}
+
+
+// --------------------------------------------------
+// FULL HOUSE
+// --------------------------------------------------
+
+function checkFullHouse() {
+
+  const numbers = ticket.filter(
+    number => number !== null
+  );
+
+  return numbers.length === 15 &&
+    numbers.every(
+      number => markedNumbers.has(number)
+    );
+}
+
+
+// --------------------------------------------------
+// ADD WINNER
+// --------------------------------------------------
+
+function addWinner(type, title) {
+
+  if (winners[type]) return;
+
+  winners[type] = true;
+
+  const item = document.createElement("div");
+
+  item.className = "winner";
+
+  item.innerHTML =
+    `<strong>🏆 ${title}</strong><br>
+     Congratulations! You completed this claim.`;
+
+  if (
+    claimsList.querySelector(".no-winner")
+  ) {
+    claimsList.innerHTML = "";
+  }
+
+  claimsList.appendChild(item);
+
+}
+
+
+// --------------------------------------------------
+// AUTOMATIC CLAIM CHECK
+// --------------------------------------------------
+
+function checkAutomaticClaims() {
+
+  if (checkLine(0)) {
+    addWinner("top", "Top Line");
+  }
+
+  if (checkLine(1)) {
+    addWinner("middle", "Middle Line");
+  }
+
+  if (checkLine(2)) {
+    addWinner("bottom", "Bottom Line");
+  }
+
+  if (checkFullHouse()) {
+    addWinner("full", "FULL HOUSE");
+  }
+
+}
+
+
+// --------------------------------------------------
+// MANUAL CLAIM BUTTON
+// --------------------------------------------------
+
+document.querySelectorAll(
+  "[data-claim]"
+).forEach(button => {
+
+  button.addEventListener("click", () => {
+
+    const type = button.dataset.claim;
+
+    if (type === "top") {
+
+      if (checkLine(0)) {
+        addWinner("top", "Top Line");
+      } else {
+        alert(
+          "❌ Top Line is not complete yet."
+        );
+      }
+
+    }
+
+    if (type === "middle") {
+
+      if (checkLine(1)) {
+        addWinner("middle", "Middle Line");
+      } else {
+        alert(
+          "❌ Middle Line is not complete yet."
+        );
+      }
+
+    }
+
+    if (type === "bottom") {
+
+      if (checkLine(2)) {
+        addWinner("bottom", "Bottom Line");
+      } else {
+        alert(
+          "❌ Bottom Line is not complete yet."
+        );
+      }
+
+    }
+
+    if (type === "full") {
+
+      if (checkFullHouse()) {
+        addWinner("full", "FULL HOUSE");
+      } else {
+        alert(
+          "❌ Full House is not complete yet."
+        );
+      }
+
+    }
+
+  });
+
+});
+
+
+// --------------------------------------------------
+// NEW GAME
+// --------------------------------------------------
+
+function newGame() {
+
+  calledNumbers = [];
+
+  markedNumbers.clear();
+
+  winners = {
+    top: false,
+    middle: false,
+    bottom: false,
+    full: false
+  };
+
+  currentNumberEl.textContent = "-";
+
+  bigNumberEl.textContent = "-";
+
+  messageEl.textContent =
+    "Ready to play?";
+
+  calledCountEl.textContent = "0";
+
+  remainingCountEl.textContent = "90";
+
+  callBtn.disabled = false;
+
+  claimsList.innerHTML =
+    `<p class="no-winner">
+      No winners yet
+    </p>`;
+
+  createBoard();
+
+  newTicket();
+
+  updateBoard();
+
+}
+
+
+// --------------------------------------------------
+// BUTTON EVENTS
+// --------------------------------------------------
+
+callBtn.addEventListener(
+  "click",
+  callNumber
+);
+
+newGameBtn.addEventListener(
+  "click",
+  newGame
+);
+
+newTicketBtn.addEventListener(
+  "click",
+  newTicket
+);
+
+
+// --------------------------------------------------
+// START GAME
+// --------------------------------------------------
+
+newGame();const ticketEl = document.getElementById("ticket");
+const boardEl = document.getElementById("board");
 const calledEl = document.getElementById("called");
 
 let called = [];
