@@ -1,4 +1,707 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Housie Online</title><style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #111827, #312e81);
+  color: white;
+  min-height: 100vh;
+  padding: 15px;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 32px;
+  margin: 15px 0 5px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #d1d5db;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 18px;
+  backdrop-filter: blur(8px);
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.stat-number {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.stat-label {
+  color: #d1d5db;
+  font-size: 13px;
+}
+
+.number-display {
+  text-align: center;
+  font-size: 70px;
+  font-weight: bold;
+  background: white;
+  color: #111827;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 5px;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.call-btn {
+  background: #22c55e;
+  color: white;
+  width: calc(100% - 10px);
+}
+
+.new-btn {
+  background: #ef4444;
+  color: white;
+  width: calc(100% - 10px);
+}
+
+.ticket-btn {
+  background: #f59e0b;
+  color: white;
+  width: calc(100% - 10px);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.number {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 9px 2px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.number.called {
+  background: #22c55e;
+  color: white;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+.ticket {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  margin-top: 15px;
+}
+
+.ticket-cell {
+  min-height: 48px;
+  background: white;
+  color: #111827;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.ticket-cell.empty {
+  background: rgba(255,255,255,0.08);
+}
+
+.ticket-cell.marked {
+  background: #22c55e;
+  color: white;
+  text-decoration: line-through;
+  transform: scale(0.95);
+}
+
+.winners {
+  margin-top: 15px;
+}
+
+.winner {
+  background: rgba(34,197,94,0.2);
+  border: 1px solid #22c55e;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.small {
+  color: #d1d5db;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+@media (max-width: 500px) {
+  h1 {
+    font-size: 27px;
+  }
+
+  .number-display {
+    font-size: 55px;
+  }
+
+  .board {
+    gap: 4px;
+  }
+
+  .number {
+    padding: 7px 1px;
+    font-size: 13px;
+  }
+
+  .ticket-cell {
+    min-height: 40px;
+    font-size: 15px;
+  }
+}
+</style></head><body><div class="container">  <h1>🎱 Housie Online</h1>
+  <p class="subtitle">Play Housie / Tambola</p>  <!-- CALLER -->  <div class="card"><div class="stats">
+  <div>
+    <div class="stat-number" id="calledCount">0</div>
+    <div class="stat-label">Called</div>
+  </div>
+
+  <div>
+    <div class="stat-number" id="remainingCount">90</div>
+    <div class="stat-label">Remaining</div>
+  </div>
+</div>
+
+<div class="number-display" id="currentNumber">-</div>
+
+<button class="call-btn" onclick="callNumber()">
+  📢 CALL NUMBER
+</button>
+
+<button class="new-btn" onclick="newGame()">
+  🔄 NEW GAME
+</button>
+
+  </div>  <!-- TICKET -->  <div class="card"><h2>🎟️ My Housie Ticket</h2>
+
+<div class="ticket" id="ticket"></div>
+
+<button class="ticket-btn" onclick="generateTicket()">
+  🎟️ NEW TICKET
+</button>
+
+<div class="small">
+  Tap a number on your ticket to mark it.
+</div>
+
+  </div>  <!-- WINNERS -->  <div class="card"><h2>🏆 Claims</h2>
+
+<div class="winners" id="winners">
+  <div class="small">
+    No winners yet
+  </div>
+</div>
+
+  </div>  <!-- BOARD -->  <div class="card"><h2 style="margin-bottom:12px;">Numbers Board</h2>
+
+<div class="board" id="board"></div>
+
+  </div></div><script>
+
+let numbers = [];
+let calledNumbers = [];
+let ticket = [];
+let claims = {
+  early5: false,
+  topLine: false,
+  middleLine: false,
+  bottomLine: false,
+  fullHouse: false
+};
+
+/* =========================
+   CREATE NUMBERS
+========================= */
+
+function createNumbers() {
+
+  numbers = [];
+
+  for (let i = 1; i <= 90; i++) {
+    numbers.push(i);
+  }
+}
+
+/* =========================
+   CREATE BOARD
+========================= */
+
+function createBoard() {
+
+  const board = document.getElementById("board");
+
+  board.innerHTML = "";
+
+  for (let i = 1; i <= 90; i++) {
+
+    const number = document.createElement("div");
+
+    number.className = "number";
+    number.id = "number-" + i;
+    number.textContent = i;
+
+    board.appendChild(number);
+  }
+}
+
+/* =========================
+   CALL NUMBER
+========================= */
+
+function callNumber() {
+
+  if (numbers.length === 0) {
+
+    alert("🎉 All 90 numbers have been called!");
+
+    return;
+  }
+
+  const randomIndex =
+    Math.floor(Math.random() * numbers.length);
+
+  const number = numbers[randomIndex];
+
+  numbers.splice(randomIndex, 1);
+
+  calledNumbers.push(number);
+
+  document.getElementById("currentNumber")
+    .textContent = number;
+
+  const boardNumber =
+    document.getElementById("number-" + number);
+
+  if (boardNumber) {
+    boardNumber.classList.add("called");
+  }
+
+  document.getElementById("calledCount")
+    .textContent = calledNumbers.length;
+
+  document.getElementById("remainingCount")
+    .textContent = numbers.length;
+
+  markTicketNumber(number);
+
+  checkWinners();
+
+  speakNumber(number);
+}
+
+/* =========================
+   VOICE
+========================= */
+
+function speakNumber(number) {
+
+  if ("speechSynthesis" in window) {
+
+    window.speechSynthesis.cancel();
+
+    const speech =
+      new SpeechSynthesisUtterance(
+        "Number " + number
+      );
+
+    speech.rate = 0.9;
+    speech.pitch = 1;
+
+    window.speechSynthesis.speak(speech);
+  }
+}
+
+/* =========================
+   GENERATE TICKET
+========================= */
+
+function generateTicket() {
+
+  ticket = Array(27).fill(null);
+
+  /*
+    Each row gets 5 numbers.
+  */
+
+  for (let row = 0; row < 3; row++) {
+
+    let positions = [];
+
+    while (positions.length < 5) {
+
+      const position =
+        Math.floor(Math.random() * 9);
+
+      if (!positions.includes(position)) {
+        positions.push(position);
+      }
+    }
+
+    positions.sort((a,b) => a-b);
+
+    for (let col of positions) {
+
+      let min = col * 10 + 1;
+      let max = col === 8 ? 90 : (col + 1) * 10;
+
+      let value;
+
+      let attempts = 0;
+
+      do {
+
+        value =
+          Math.floor(
+            Math.random() *
+            (max - min + 1)
+          ) + min;
+
+        attempts++;
+
+      } while (
+        ticket.includes(value) &&
+        attempts < 100
+      );
+
+      ticket[row * 9 + col] = value;
+    }
+  }
+
+  renderTicket();
+
+  claims = {
+    early5: false,
+    topLine: false,
+    middleLine: false,
+    bottomLine: false,
+    fullHouse: false
+  };
+
+  updateWinners();
+}
+
+/* =========================
+   DISPLAY TICKET
+========================= */
+
+function renderTicket() {
+
+  const ticketEl =
+    document.getElementById("ticket");
+
+  ticketEl.innerHTML = "";
+
+  ticket.forEach((value, index) => {
+
+    const cell =
+      document.createElement("div");
+
+    cell.className = "ticket-cell";
+
+    if (value === null) {
+
+      cell.classList.add("empty");
+
+    } else {
+
+      cell.textContent = value;
+
+      cell.dataset.index = index;
+
+      if (calledNumbers.includes(value)) {
+        cell.classList.add("marked");
+      }
+
+      cell.onclick = function() {
+
+        if (calledNumbers.includes(value)) {
+          cell.classList.toggle("marked");
+        } else {
+          alert(
+            "❌ Number " +
+            value +
+            " has not been called yet!"
+          );
+        }
+
+      };
+    }
+
+    ticketEl.appendChild(cell);
+  });
+}
+
+/* =========================
+   MARK TICKET
+========================= */
+
+function markTicketNumber(number) {
+
+  const cells =
+    document.querySelectorAll(".ticket-cell");
+
+  cells.forEach(cell => {
+
+    if (Number(cell.textContent) === number) {
+      cell.classList.add("marked");
+    }
+
+  });
+}
+
+/* =========================
+   CHECK WINNERS
+========================= */
+
+function checkWinners() {
+
+  if (!ticket.length) return;
+
+  const ticketNumbers =
+    ticket.filter(n => n !== null);
+
+  const markedNumbers =
+    ticketNumbers.filter(n =>
+      calledNumbers.includes(n)
+    );
+
+  /* EARLY 5 */
+
+  if (
+    markedNumbers.length >= 5 &&
+    !claims.early5
+  ) {
+
+    claims.early5 = true;
+
+    addWinner("🎯 Early 5");
+  }
+
+  /* TOP LINE */
+
+  const topLine =
+    ticket.slice(0, 9)
+      .filter(n => n !== null);
+
+  if (
+    topLine.length > 0 &&
+    topLine.every(n =>
+      calledNumbers.includes(n)
+    ) &&
+    !claims.topLine
+  ) {
+
+    claims.topLine = true;
+
+    addWinner("🥇 Top Line");
+  }
+
+  /* MIDDLE LINE */
+
+  const middleLine =
+    ticket.slice(9, 18)
+      .filter(n => n !== null);
+
+  if (
+    middleLine.length > 0 &&
+    middleLine.every(n =>
+      calledNumbers.includes(n)
+    ) &&
+    !claims.middleLine
+  ) {
+
+    claims.middleLine = true;
+
+    addWinner("🥈 Middle Line");
+  }
+
+  /* BOTTOM LINE */
+
+  const bottomLine =
+    ticket.slice(18, 27)
+      .filter(n => n !== null);
+
+  if (
+    bottomLine.length > 0 &&
+    bottomLine.every(n =>
+      calledNumbers.includes(n)
+    ) &&
+    !claims.bottomLine
+  ) {
+
+    claims.bottomLine = true;
+
+    addWinner("🥉 Bottom Line");
+  }
+
+  /* FULL HOUSE */
+
+  if (
+    ticketNumbers.length > 0 &&
+    ticketNumbers.every(n =>
+      calledNumbers.includes(n)
+    ) &&
+    !claims.fullHouse
+  ) {
+
+    claims.fullHouse = true;
+
+    addWinner("🏆 FULL HOUSE!");
+  }
+
+  updateWinners();
+}
+
+/* =========================
+   ADD WINNER
+========================= */
+
+function addWinner(name) {
+
+  const winners =
+    document.getElementById("winners");
+
+  const empty =
+    winners.querySelector(".small");
+
+  if (empty) {
+    winners.innerHTML = "";
+  }
+
+  const winner =
+    document.createElement("div");
+
+  winner.className = "winner";
+
+  winner.textContent =
+    "🎉 " + name + " completed!";
+
+  winners.appendChild(winner);
+}
+
+/* =========================
+   UPDATE WINNERS
+========================= */
+
+function updateWinners() {
+
+  const winners =
+    document.getElementById("winners");
+
+  if (
+    !claims.early5 &&
+    !claims.topLine &&
+    !claims.middleLine &&
+    !claims.bottomLine &&
+    !claims.fullHouse
+  ) {
+
+    winners.innerHTML =
+      '<div class="small">No winners yet</div>';
+  }
+}
+
+/* =========================
+   NEW GAME
+========================= */
+
+function newGame() {
+
+  const confirmGame =
+    confirm("Start a new Housie game?");
+
+  if (!confirmGame) {
+    return;
+  }
+
+  createNumbers();
+
+  calledNumbers = [];
+
+  claims = {
+    early5: false,
+    topLine: false,
+    middleLine: false,
+    bottomLine: false,
+    fullHouse: false
+  };
+
+  document.getElementById("currentNumber")
+    .textContent = "-";
+
+  document.getElementById("calledCount")
+    .textContent = "0";
+
+  document.getElementById("remainingCount")
+    .textContent = "90";
+
+  createBoard();
+
+  generateTicket();
+
+  updateWinners();
+
+  window.speechSynthesis.cancel();
+}
+
+/* =========================
+   START
+========================= */
+
+createNumbers();
+
+createBoard();
+
+generateTicket();
+
+</script></body>
+  </html><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
