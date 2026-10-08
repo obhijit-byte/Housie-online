@@ -50,7 +50,7 @@
       text-align: center;
       font-size: 70px;
       font-weight: bold;
-      background: #ffffff;
+      background: white;
       color: #111827;
       border-radius: 20px;
       padding: 20px;
@@ -80,4 +80,220 @@
     }
 
     button:active {
-      transform: scale(0.
+      transform: scale(0.97);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .number {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 9px 2px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .called {
+      background: #22c55e;
+      color: white;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .stat-number {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      color: #d1d5db;
+      font-size: 13px;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 27px;
+      }
+
+      .number-display {
+        font-size: 55px;
+      }
+
+      .board {
+        gap: 4px;
+      }
+
+      .number {
+        padding: 7px 1px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎱 Housie Online</h1>
+    <p class="subtitle">Play Housie / Tambola</p>
+
+    <div class="card">
+
+      <div class="stats">
+        <div>
+          <div class="stat-number" id="calledCount">0</div>
+          <div class="stat-label">Called</div>
+        </div>
+
+        <div>
+          <div class="stat-number" id="remainingCount">90</div>
+          <div class="stat-label">Remaining</div>
+        </div>
+      </div>
+
+      <div class="number-display" id="currentNumber">
+        -
+      </div>
+
+      <button class="call-btn" onclick="callNumber()">
+        📢 CALL NUMBER
+      </button>
+
+      <button class="new-btn" onclick="newGame()">
+        🔄 NEW GAME
+      </button>
+
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:12px;">Numbers Board</h2>
+
+      <div class="board" id="board"></div>
+    </div>
+
+  </div>
+
+<script>
+
+  let numbers = [];
+  let calledNumbers = [];
+
+  function createNumbers() {
+    numbers = [];
+
+    for (let i = 1; i <= 90; i++) {
+      numbers.push(i);
+    }
+  }
+
+  function createBoard() {
+
+    const board = document.getElementById("board");
+
+    board.innerHTML = "";
+
+    for (let i = 1; i <= 90; i++) {
+
+      const number = document.createElement("div");
+
+      number.className = "number";
+      number.id = "number-" + i;
+      number.textContent = i;
+
+      board.appendChild(number);
+    }
+  }
+
+  function callNumber() {
+
+    if (numbers.length === 0) {
+      alert("🎉 All 90 numbers have been called!");
+      return;
+    }
+
+    const randomIndex =
+      Math.floor(Math.random() * numbers.length);
+
+    const number = numbers[randomIndex];
+
+    numbers.splice(randomIndex, 1);
+
+    calledNumbers.push(number);
+
+    document.getElementById("currentNumber")
+      .textContent = number;
+
+    document.getElementById("number-" + number)
+      .classList.add("called");
+
+    document.getElementById("calledCount")
+      .textContent = calledNumbers.length;
+
+    document.getElementById("remainingCount")
+      .textContent = numbers.length;
+
+    speakNumber(number);
+  }
+
+  function speakNumber(number) {
+
+    if ("speechSynthesis" in window) {
+
+      window.speechSynthesis.cancel();
+
+      const speech =
+        new SpeechSynthesisUtterance(
+          "Number " + number
+        );
+
+      speech.rate = 0.9;
+      speech.pitch = 1;
+
+      window.speechSynthesis.speak(speech);
+    }
+  }
+
+  function newGame() {
+
+    const confirmGame =
+      confirm("Start a new Housie game?");
+
+    if (!confirmGame) {
+      return;
+    }
+
+    createNumbers();
+
+    calledNumbers = [];
+
+    document.getElementById("currentNumber")
+      .textContent = "-";
+
+    document.getElementById("calledCount")
+      .textContent = "0";
+
+    document.getElementById("remainingCount")
+      .textContent = "90";
+
+    createBoard();
+  }
+
+  createNumbers();
+  createBoard();
+
+</script>
+
+</body>
+</html>
