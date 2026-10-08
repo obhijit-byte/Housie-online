@@ -3,7 +3,257 @@ const boardEl = document.getElementById("board");
 const calledEl = document.getElementById("called");
 
 let called = [];
+let ticket = [];const ticketEl = document.getElementById("ticket");
+const boardEl = document.getElementById("board");
+const calledEl = document.getElementById("called");
+
+let called = [];
 let ticket = [];
+
+// =============================
+// SHUFFLE
+// =============================
+function shuffle(array) {
+  const arr = [...array];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
+}
+
+// =============================
+// GET NUMBERS FOR COLUMN
+// =============================
+function getColumnNumbers(column) {
+  if (column === 0) {
+    return Array.from({ length: 9 }, (_, i) => i + 1);
+  }
+
+  if (column === 8) {
+    return Array.from({ length: 11 }, (_, i) => i + 80);
+  }
+
+  return Array.from(
+    { length: 10 },
+    (_, i) => column * 10 + i
+  );
+}
+
+// =============================
+// CREATE TAMBOLA TICKET
+// =============================
+function makeTicket() {
+  ticket = Array(27).fill(null);
+
+  const rowColumns = [];
+
+  // Each row gets exactly 5 columns
+  for (let row = 0; row < 3; row++) {
+    rowColumns[row] = shuffle(
+      Array.from({ length: 9 }, (_, i) => i)
+    )
+      .slice(0, 5)
+      .sort((a, b) => a - b);
+  }
+
+  // Make sure every column has at least one number
+  for (let column = 0; column < 9; column++) {
+    const rowsWithColumn = [];
+
+    for (let row = 0; row < 3; row++) {
+      if (rowColumns[row].includes(column)) {
+        rowsWithColumn.push(row);
+      }
+    }
+
+    if (rowsWithColumn.length === 0) {
+      const possibleRows = [0, 1, 2].filter(
+        row => rowColumns[row].length > 1
+      );
+
+      const row =
+        possibleRows[
+          Math.floor(Math.random() * possibleRows.length)
+        ];
+
+      const removeIndex = Math.floor(
+        Math.random() * rowColumns[row].length
+      );
+
+      rowColumns[row].splice(removeIndex, 1);
+      rowColumns[row].push(column);
+      rowColumns[row].sort((a, b) => a - b);
+    }
+  }
+
+  // Put numbers into columns
+  for (let column = 0; column < 9; column++) {
+    const rows = [];
+
+    for (let row = 0; row < 3; row++) {
+      if (rowColumns[row].includes(column)) {
+        rows.push(row);
+      }
+    }
+
+    const numbers = shuffle(
+      getColumnNumbers(column)
+    )
+      .slice(0, rows.length)
+      .sort((a, b) => a - b);
+
+    rows.forEach((row, index) => {
+      ticket[row * 9 + column] = numbers[index];
+    });
+  }
+
+  renderTicket();
+}
+
+// =============================
+// RENDER TICKET
+// =============================
+function renderTicket() {
+  if (!ticketEl) return;
+
+  ticketEl.innerHTML = "";
+
+  ticket.forEach(number => {
+    const cell = document.createElement("div");
+
+    if (number === null) {
+      cell.className = "cell blank";
+    } else {
+      cell.className = "cell";
+      cell.textContent = number;
+
+      // Manual marking
+      cell.addEventListener("click", () => {
+        if (called.includes(number)) {
+          cell.classList.toggle("marked");
+        }
+      });
+
+      // Automatically mark called numbers
+      if (called.includes(number)) {
+        cell.classList.add("marked");
+      }
+    }
+
+    ticketEl.appendChild(cell);
+  });
+}
+
+// =============================
+// RENDER 1 - 90 BOARD
+// =============================
+function renderBoard() {
+  if (!boardEl) return;
+
+  boardEl.innerHTML = "";
+
+  for (let number = 1; number <= 90; number++) {
+    const ball = document.createElement("div");
+
+    ball.className = "ball";
+
+    if (called.includes(number)) {
+      ball.classList.add("called");
+    }
+
+    ball.textContent = number;
+
+    boardEl.appendChild(ball);
+  }
+}
+
+// =============================
+// CALL NEXT NUMBER
+// =============================
+function nextNumber() {
+  if (called.length >= 90) {
+    calledEl.textContent = "All 90 numbers called!";
+    return;
+  }
+
+  const remaining = [];
+
+  for (let number = 1; number <= 90; number++) {
+    if (!called.includes(number)) {
+      remaining.push(number);
+    }
+  }
+
+  const number =
+    remaining[
+      Math.floor(Math.random() * remaining.length)
+    ];
+
+  called.push(number);
+
+  if (calledEl) {
+    calledEl.textContent = number;
+  }
+
+  renderBoard();
+  renderTicket();
+}
+
+// =============================
+// RESET GAME
+// =============================
+function resetGame() {
+  called = [];
+
+  if (calledEl) {
+    calledEl.textContent = "No number called yet";
+  }
+
+  renderBoard();
+  renderTicket();
+}
+
+// =============================
+// BUTTONS
+// =============================
+const newTicketBtn =
+  document.getElementById("newTicket");
+
+const nextBtn =
+  document.getElementById("next");
+
+const resetBtn =
+  document.getElementById("reset");
+
+if (newTicketBtn) {
+  newTicketBtn.addEventListener(
+    "click",
+    makeTicket
+  );
+}
+
+if (nextBtn) {
+  nextBtn.addEventListener(
+    "click",
+    nextNumber
+  );
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener(
+    "click",
+    resetGame
+  );
+}
+
+// =============================
+// START
+// =============================
+makeTicket();
+renderBoard();
 
 // -----------------------------
 // Utility
