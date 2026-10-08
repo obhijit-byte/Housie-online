@@ -1,4 +1,127 @@
-let allTickets = [];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Housie Online</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1>🎱 Housie Online</h1>
+      <p>Play Housie / Tambola</p>
+    </header>
+
+    <!-- GAME INFO -->
+    <section class="stats">
+
+      <div class="stat">
+        <span id="calledCount">0</span>
+        <small>Called</small>
+      </div>
+
+      <div class="stat">
+        <span id="remainingCount">90</span>
+        <small>Remaining</small>
+      </div>
+
+      <div class="stat current">
+        <span id="currentNumber">-</span>
+        <small>Current</small>
+      </div>
+
+    </section>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+
+      <button id="callBtn" class="call-btn">
+        📢 CALL NUMBER
+      </button>
+
+      <button id="newGameBtn" class="new-btn">
+        🔄 NEW GAME
+      </button>
+
+    </div>
+
+    <!-- LAST NUMBER -->
+    <section class="last-number">
+
+      <div class="ball" id="bigNumber">-</div>
+
+      <div>
+        <h2 id="message">Ready to play?</h2>
+        <p>Press CALL NUMBER to start.</p>
+      </div>
+
+    </section>
+
+    <!-- TICKET -->
+    <section class="ticket-section">
+
+      <div class="section-title">
+        <h2>🎟️ My Housie Ticket</h2>
+
+        <button id="newTicketBtn">
+          🎟️ NEW TICKET
+        </button>
+      </div>
+
+      <p class="hint">
+        Tap a number on your ticket to mark it.
+      </p>
+
+      <div id="ticket" class="ticket"></div>
+
+      <div id="claimButtons" class="claims">
+
+        <button data-claim="top">🏆 Top Line</button>
+        <button data-claim="middle">🏆 Middle Line</button>
+        <button data-claim="bottom">🏆 Bottom Line</button>
+        <button data-claim="full">🏆 Full House</button>
+
+      </div>
+
+    </section>
+
+    <!-- CLAIMS -->
+    <section class="claims-section">
+
+      <h2>🏆 Claims</h2>
+
+      <div id="claimsList">
+        <p class="no-winner">No winners yet</p>
+      </div>
+
+    </section>
+
+    <!-- NUMBER BOARD -->
+    <section class="board-section">
+
+      <h2>🔢 Numbers Board</h2>
+
+      <div id="board" class="board"></div>
+
+    </section>
+
+    <footer>
+      <p>🎱 Housie Online</p>
+      <p>Have fun playing Tambola!</p>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>let allTickets = [];
 
 function createSingleTicket() {
 
